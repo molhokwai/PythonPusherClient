@@ -10,7 +10,7 @@ except ImportError:
 
 
 class Connection(Thread):
-    def __init__(self, event_handler, url, log_level=logging.INFO, daemon=True, reconnect_interval=10):
+    def __init__(self, event_handler, url, event_names=[], log_level=logging.INFO, daemon=True, reconnect_interval=10):
         self.event_handler = event_handler
         self.url = url
 
@@ -33,6 +33,8 @@ class Connection(Thread):
         self.bind("pusher:pong", self._pong_handler)
         self.bind("pusher:ping", self._ping_handler)
         self.bind("pusher:error", self._pusher_error_handler)
+        for event_name in event_names:
+            self.bind(event_name, event_handler)
 
         self.state = "initialized"
 

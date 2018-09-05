@@ -19,7 +19,13 @@ class Pusher(object):
     client_id = 'PythonPusherClient'
     protocol = 6
 
-    def __init__(self, key, secure=True, secret=None, user_data=None, log_level=logging.INFO, daemon=True, port=None, reconnect_interval=10):
+    def __init__(self, key, cluster=None, event_names=[], secure=True, secret=None, user_data=None, log_level=logging.INFO, daemon=True, port=None, reconnect_interval=10):
+        # https://pusher.com/docs/clusters
+        if cluster:
+            self.host = "ws-{cluster}.pusher.com".format(cluster=cluster)
+        else:
+            self.host = "ws.pusherapp.com"
+
         self.key = key
         self.secret = secret
         self.user_data = user_data or {}
@@ -28,7 +34,7 @@ class Pusher(object):
 
         self.url = self._build_url(key, secure, port)
 
-        self.connection = Connection(self._connection_handler, self.url, log_level=log_level, daemon=daemon, reconnect_interval=reconnect_interval)
+        self.connection = Connection(self._connection_handler, self.url, event_names=event_names, log_level=log_level, daemon=daemon, reconnect_interval=reconnect_interval)
 
     def connect(self):
         """Connect to Pusher"""
@@ -122,13 +128,12 @@ class Pusher(object):
 
         return auth_key
 
-    @classmethod
-    def _build_url(cls, key, secure, port=None):
+    def _build_url(self, key, secure, port=None):
         path = "/app/%s?client=%s&version=%s&protocol=%s" % (
             key,
-            cls.client_id,
+            self.client_id,
             VERSION,
-            cls.protocol
+            self.protocol
         )
 
         proto = "ws"
@@ -144,7 +149,7 @@ class Pusher(object):
 
         return "%s://%s:%s%s" % (
             proto,
-            cls.host,
+            self.host,
             port,
             path
         )
